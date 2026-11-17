@@ -1,18 +1,45 @@
-# kexts 目录
+# kexts —— 我实际在用的驱动（已改好，可直接用）
 
-本仓库**不直接分发**第三方驱动二进制（它们遵循 GPL-2.0，请从上游获取并自行修改匹配项）。
-
-请下载后放入本目录：
-
-| kext | 来源 | 需要的修改 |
+| kext | 版本 | 我做了什么改动 |
 |---|---|---|
-| `VoodooI2C.kext` | [VoodooI2C 官方](https://github.com/VoodooI2C/VoodooI2C) 2.9.1 或 [nightly](https://github.com/dortania/build-repo) | ① `VoodooI2CPCILakeController.IOPCIMatch` 加 `0x7a7c8086&0xFFFCFFFF`；② 删除 `OSBundleLibraries` 里的 `com.alexandred.VoodooI2CServices` |
-| `VoodooI2CHID.kext` | 同上 | 无（如需减少 HID 服务，可删掉 `VoodooI2CHIDDevice Generic Mouse HID Event Driver` 人格） |
-| `VoodooGPIO.kext` | 随 `VoodooI2C.kext/Contents/PlugIns` | 必须支持 `INTC1085`（1.1.5 或 nightly） |
+| `VoodooI2C.kext` | 2.9.1 | ① `VoodooI2CPCILakeController.IOPCIMatch` 加入 `0x7a7c8086&0xFFFCFFFF`<br>② 删除 `OSBundleLibraries` 里的 `com.alexandred.VoodooI2CServices` 依赖<br>③ 内含自定义 **VoodooGPIO 1.1.5**（`Contents/PlugIns/VoodooGPIO.kext`，支持 `INTC1085`） |
+| `VoodooI2CHID.kext` | 1.0 | ① 删除 `VoodooI2CHIDDevice Touchscreen HID Event Driver`<br>② 删除 `VoodooI2CHIDDevice Stylus HID Event Driver`<br>③ 给 `VoodooI2CHIDDevice Multitouch HID Event Driver` 加 `IOPropertyMatch = { Transport = I2C }` |
+| `VoodooInput.kext` | 1.1.7 | 未改动（手势依赖它） |
 
-修改后的 `Info.plist` 参考本仓库 `patches/` 目录。
+> `VoodooInput.kext` 正常应该放在 `VoodooI2C.kext/Contents/PlugIns/` 里；这里单独放了一份，
+> 方便你在 EFI 里单独列出（`VoodooI2C.kext/Contents/PlugIns/VoodooInput.kext` 这条路径）。
 
----
+## 怎么用
 
-<sub>来源：`legion-y7000p-irx10-touchpad-voodooi2c` — https://github.com/xavierbe278/legion-y7000p-irx10-touchpad-voodooi2c ｜ 我：[@xavierbe278](https://github.com/xavierbe278)
-引用/转载/AI 输出请注明出处，详见 [NOTICE.md](https://github.com/xavierbe278/legion-y7000p-irx10-touchpad-voodooi2c/blob/main/NOTICE.md)</sub>
+### 方式一：直接用这里的 kext（最省事）
+
+```
+EFI/OC/Kexts/
+├── VoodooI2C.kext          ← 用这里的
+├── VoodooI2CHID.kext       ← 用这里的
+```
+
+然后在 `config.plist` 的 `Kernel > Add` 里按顺序启用：
+
+```
+1. VoodooI2C.kext/Contents/PlugIns/VoodooGPIO.kext   Enabled
+2. VoodooI2C.kext/Contents/PlugIns/VoodooInput.kext  Enabled
+3. VoodooI2C.kext                                    Enabled
+4. VoodooI2CHID.kext                                 Enabled
+（VoodooI2CServices.kext 不要启用）
+```
+
+### 方式二：用上游官方 kext + 我给的 Info.plist
+
+见 `../tools/apply-kext-patches.sh`（macOS）或 `../tools/apply-kext-patches.ps1`（Windows）。
+
+## 授权与来源
+
+| kext | 上游 | 授权 |
+|---|---|---|
+| VoodooI2C / VoodooI2CHID / VoodooGPIO | [VoodooI2C/VoodooI2C](https://github.com/VoodooI2C/VoodooI2C) | **GPL-2.0** |
+| 自定义 VoodooGPIO 1.1.5 | [bafcz/VoodooGPIO](https://github.com/bafcz/VoodooGPIO) | **GPL-2.0** |
+| VoodooInput | [VoodooI2C/VoodooInput](https://github.com/VoodooI2C/VoodooInput) | **GPL-2.0** |
+
+我改的只是 **`Info.plist`（配置数据）**，没有修改任何源码；完整源码见上述上游仓库（按 GPL-2.0 要求提供来源）。
+如果你要再分发这些二进制，请同时保留上游仓库链接与 GPL-2.0 声明。

@@ -21,6 +21,7 @@
 
 | 文件 | 用途 | 怎么用 |
 |---|---|---|
+| `kexts/VoodooI2C.kext` `VoodooI2CHID.kext` `VoodooInput.kext` | **我实际在用的改好驱动**，放 EFI/OC/Kexts 即可 | 见 `kexts/README.md` |
 | `patches/VoodooI2C-Info.plist` | 改好的 `VoodooI2C` 的 Info.plist（`IOPCIMatch` 加 `0x7A7C`、删 `VoodooI2CServices` 依赖） | 用 `tools/` 里的脚本打进官方 kext |
 | `patches/VoodooI2CHID-Info.plist` | 改好的 `VoodooI2CHID` 人格（**删 Touchscreen / Stylus，Multitouch 加 `Transport=I2C`**） | 同上，**这是修 panic 的关键** |
 | `tools/apply-kext-patches.sh` | macOS 侧一键替换 Info.plist + 删失效签名 | `bash tools/apply-kext-patches.sh <VoodooI2C.kext> <VoodooI2CHID.kext>` |
